@@ -12,6 +12,7 @@
 // @require      https://code.jquery.com/jquery-3.4.0.min.js
 // @grant        unsafeWindow
 // @run-at       document-end
+// @update-url   https://github.com/FarisHijazi/JupyterNotebookUserScript/raw/master/upgradeJupyterNotebooks.user.js
 // ==/UserScript==
 
 if (typeof unsafeWindow === 'undefined') {
@@ -329,6 +330,9 @@ unsafeWindow.SHA1 = SHA1;
 
 (function () {
     'use strict';
+    // set notebook container to max width
+    document.querySelector('#notebook-container').style.width = 'max-content';
+
     observeDocument(function () {
         // restart button confirm
         var submitButtonDanger = document.querySelector("body > div.modal.fade.in > div > div > div.modal-footer > button.btn.btn-default.btn-sm.btn-danger");
