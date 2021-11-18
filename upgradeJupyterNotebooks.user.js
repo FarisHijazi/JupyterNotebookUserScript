@@ -12,6 +12,8 @@
 // @require      https://code.jquery.com/jquery-3.4.0.min.js
 // @grant        unsafeWindow
 // @run-at       document-end
+// @downloadURL  https://github.com/FarisHijazi/JupyterNotebookUserScript/raw/master/upgradeJupyterNotebooks.user.js
+// @updateURL    https://github.com/FarisHijazi/JupyterNotebookUserScript/raw/master/upgradeJupyterNotebooks.user.js
 // @update-url   https://github.com/FarisHijazi/JupyterNotebookUserScript/raw/master/upgradeJupyterNotebooks.user.js
 // ==/UserScript==
 
