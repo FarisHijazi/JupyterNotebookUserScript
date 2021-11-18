@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         upgrade jupyter notebooks
 // @namespace    http://github.com/farishijazi/
-// @version      0.2
+// @version      0.3
 // @description  upgrade jupyter notebook
 // @description  add F2 hotkey to scroll page to latest run cell
 // @description  autoconfirm "restart kernel"
