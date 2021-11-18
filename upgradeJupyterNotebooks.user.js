@@ -1,14 +1,15 @@
 // ==UserScript==
 // @name         upgrade jupyter notebooks
 // @namespace    http://github.com/farishijazi/
-// @version      0.3
+// @version      0.4
 // @description  upgrade jupyter notebook
 // @description  add F2 hotkey to scroll page to latest run cell
 // @description  autoconfirm "restart kernel"
 // @description  rename audio elements (does so based on the printed python text right before them)
 // @description  colors ribbon based on name (unique to each URL), useful when switching between many notebooks
+// @description  adds buttons to notebook cell outputs to download the raw HTML as a .html file (useful for sending plots and audios)
 // @author       http://github.com/farishijazi/
-// @match        *://*/*.ipynb
+// @match        *://*/*.ipynb*
 // @require      https://code.jquery.com/jquery-3.4.0.min.js
 // @grant        unsafeWindow
 // @run-at       document-end
@@ -19,6 +20,48 @@
 
 if (typeof unsafeWindow === 'undefined') {
     unsafeWindow = window;
+}
+
+var options = {
+    "colorRibbons": true,
+    "autoconfirmRestart": true,
+    "downloadOutputHTML": true,
+    "renameAudios": true,
+    "containerMaxContent": true,
+}
+
+// ======================================
+// ======================================
+// ======================================
+// ======================================
+// ======================================
+// =========== Functions here ===========
+// ======================================
+// ======================================
+// ======================================
+// ======================================
+
+
+
+function anchorClick(href, downloadValue, target) {
+    downloadValue = downloadValue || '_untitled';
+    var a = document.createElement('a');
+    a.setAttribute('href', href);
+    a.setAttribute('download', downloadValue);
+    a.target = target;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+}
+function saveByAnchor(url, dlName) {
+    anchorClick(url, dlName);
+}
+function makeTextFile(text) {
+    const data = new Blob([text], { type: 'text/plain' });
+    var textFile = null;
+    // If we are replacing a previously generated file we need to manually revoke the object URL to avoid memory leaks.
+    if (textFile !== null) window.URL.revokeObjectURL(textFile);
+    return window.URL.createObjectURL(data);
 }
 
 /**
@@ -330,81 +373,91 @@ function SHA1(msg) {
 unsafeWindow.SHA1 = SHA1;
 
 
+
+// ======================================
+// ======================================
+// ======================================
+// ======================================
+// ======================================
+// =========== Logic here ===========
+// ======================================
+// ======================================
+// ======================================
+// ======================================
+
+
 (function () {
-    'use strict';
+    // 'use strict';
+
+    console.log('options', options);
+
     // set notebook container to max width
-    var container = document.querySelector('#notebook-container');
-    if (container) container.style.width = 'max-content';
+    if (options.containerMaxContent) {
+        elementReady(document.querySelector('#notebook-container')).then(container=>{
+            container.style.width = 'max-content';
+        });
+        // var container = document.querySelector('#notebook-container');
+        // if (container) container.style.width = 'max-content';
+    }
 
     observeDocument(function () {
+
         // restart button confirm
-        var submitButtonDanger = document.querySelector("body > div.modal.fade.in > div > div > div.modal-footer > button.btn.btn-default.btn-sm.btn-danger");
-        console.debug('submitButtonDanger', submitButtonDanger);
-        if (submitButtonDanger && (submitButtonDanger.innerText === 'Restart and Run All Cells' || submitButtonDanger.innerText === 'Restart')) {
-            console.log('clicking submitButtonDanger');
-            submitButtonDanger.click();
+        if (options.autoconfirmRestart) {
+            var submitButtonDanger = document.querySelector("body > div.modal.fade.in > div > div > div.modal-footer > button.btn.btn-default.btn-sm.btn-danger");
+            console.debug('submitButtonDanger', submitButtonDanger);
+            if (submitButtonDanger && (submitButtonDanger.innerText === 'Restart and Run All Cells' || submitButtonDanger.innerText === 'Restart')) {
+                console.log('clicking submitButtonDanger');
+                submitButtonDanger.click();
+            }
         }
 
         // update audio names
-        console.debug("updating audio names");
-        Array.from(document.querySelectorAll("#notebook-container > div.cell.code_cell.rendered.selected > div.output_wrapper > div.output > div.output_area audio")).forEach(audio => {
-            var closestPre = audio.closest('div.output_area').previousElementSibling.querySelector('div > pre');
-            if (closestPre) {
-                audio.title = closestPre.innerText;
-            }
-        });
+        if (options.renameAudios) {
+            console.debug("updating audio names");
+            Array.from(document.querySelectorAll("#notebook-container > div.cell.code_cell.rendered.selected > div.output_wrapper > div.output > div.output_area audio")).forEach(audio => {
+                var closestPre = audio.closest('div.output_area').previousElementSibling.querySelector('div > pre');
+                if (closestPre) {
+                    audio.title = closestPre.innerText;
+                }
+            });
+        }
 
 
-        document.querySelectorAll('.output_wrapper').forEach(output=>{
-            if (output.querySelector('.dlbtn')) return;
-            var dlbtn = document.createElement('a');
-            dlbtn.innerText = '[⬇️] download cell HTML';
-            dlbtn.classList.add('dlbtn');
-            dlbtn.onclick = function(){
-                console.log('clicked!!', output.innerHTML);
-                anchorClick(makeTextFile('<html><body>'+output.innerHTML+'</body></html>'), document.title + ' cell output.html');
-            }
-            var output_subarea = output.querySelector('.output_subarea')
-            if (output_subarea) output_subarea.firstElementChild.before(dlbtn);
-        })
+        // adds buttons to notebook cell outputs to download the raw HTML as a .html file (useful for sending plots and audios)
+        if (options.downloadOutputHTML) {
+            document.querySelectorAll('.output_wrapper').forEach(output=>{
+                if (output.querySelector('.dlbtn')) return;
+                var dlbtn = document.createElement('a');
+                dlbtn.innerText = '[⬇️] download cell HTML';
+                dlbtn.classList.add('dlbtn');
+                dlbtn.onclick = function(){
+                    console.log('clicked!!', output.innerHTML);
+                    anchorClick(makeTextFile('<html><body>'+output.innerHTML+'</body></html>'), document.title + ' cell output.html');
+                }
+                var output_subarea = output.querySelector('.output_subarea')
+                if (output_subarea) output_subarea.firstElementChild.before(dlbtn);
+            });
+        }
 
     });
 
-
-        function anchorClick(href, downloadValue, target) {
-            downloadValue = downloadValue || '_untitled';
-            var a = document.createElement('a');
-            a.setAttribute('href', href);
-            a.setAttribute('download', downloadValue);
-            a.target = target;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-        }
-        function saveByAnchor(url, dlName) {
-            anchorClick(url, dlName);
-        }
-        function makeTextFile(text) {
-            const data = new Blob([text], { type: 'text/plain' });
-            var textFile = null;
-            // If we are replacing a previously generated file we need to manually revoke the object URL to avoid memory leaks.
-            if (textFile !== null) window.URL.revokeObjectURL(textFile);
-            return window.URL.createObjectURL(data);
-        }
 
     // colorizing based on title
     /*
      * Idea: Abdulaziz Alshamrani
      */
-    observeDocument(function () {
-        var titleEl = document.querySelector("#notebook_name");
-        var identifier = document.querySelector("#notebook_name").innerText; // or choose locaiton.href
-        if (identifier.length) {
-            var sha1sum = SHA1(identifier);
-            console.debug(identifier, 'sha1sum', sha1sum);
-            document.querySelector("#menubar-container").style.backgroundColor = "#" + sha1sum.slice(0, 6);
-        }
-    }, {baseNode: "#notebook_name"});
+    if (options.colorRibbons) {
+        observeDocument(function () {
+            var titleEl = document.querySelector("#notebook_name");
+            var identifier = document.querySelector("#notebook_name").innerText; // or choose locaiton.href
+            if (identifier.length) {
+                var sha1sum = SHA1(identifier);
+                console.debug(identifier, 'sha1sum', sha1sum);
+                document.querySelector("#menubar-container").style.backgroundColor = "#" + sha1sum.slice(0, 6);
+            }
+        }, {baseNode: "#notebook_name"});
+    }
 
 
     // F2 hotkey to scroll to latest cell
@@ -416,4 +469,3 @@ unsafeWindow.SHA1 = SHA1;
     });
 
 })();
-
