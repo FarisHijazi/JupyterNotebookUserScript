@@ -331,7 +331,8 @@ unsafeWindow.SHA1 = SHA1;
 (function () {
     'use strict';
     // set notebook container to max width
-    document.querySelector('#notebook-container').style.width = 'max-content';
+    var container = document.querySelector('#notebook-container');
+    if (container) container.style.width = 'max-content';
 
     observeDocument(function () {
         // restart button confirm
@@ -349,9 +350,45 @@ unsafeWindow.SHA1 = SHA1;
             if (closestPre) {
                 audio.title = closestPre.innerText;
             }
+        });
+
+
+        document.querySelectorAll('.output_wrapper').forEach(output=>{
+            if (output.querySelector('.dlbtn')) return;
+            var dlbtn = document.createElement('a');
+            dlbtn.innerText = '[⬇️] download cell HTML';
+            dlbtn.classList.add('dlbtn');
+            dlbtn.onclick = function(){
+                console.log('clicked!!', output.innerHTML);
+                anchorClick(makeTextFile('<html><body>'+output.innerHTML+'</body></html>'), document.title + ' cell output.html');
+            }
+            var output_subarea = output.querySelector('.output_subarea')
+            if (output_subarea) output_subarea.firstElementChild.before(dlbtn);
         })
+
     });
 
+
+        function anchorClick(href, downloadValue, target) {
+            downloadValue = downloadValue || '_untitled';
+            var a = document.createElement('a');
+            a.setAttribute('href', href);
+            a.setAttribute('download', downloadValue);
+            a.target = target;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+        function saveByAnchor(url, dlName) {
+            anchorClick(url, dlName);
+        }
+        function makeTextFile(text) {
+            const data = new Blob([text], { type: 'text/plain' });
+            var textFile = null;
+            // If we are replacing a previously generated file we need to manually revoke the object URL to avoid memory leaks.
+            if (textFile !== null) window.URL.revokeObjectURL(textFile);
+            return window.URL.createObjectURL(data);
+        }
 
     // colorizing based on title
     /*
