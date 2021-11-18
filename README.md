@@ -7,6 +7,8 @@ This is a UserScript that adds features to Jupyter Notebooks
 - Color ribbon that is unique to each notebook name and URL (it's easier to identify color for me when I have many many notebooks)
 - button to download cell output as HTML
 - each audio output widget will have it's name depending on the text above it. (Instead of each one being named "download.wav")
+- add F2 hotkey to scroll page to latest run cell
+- auto-confirm "are you sure you want to restart kernel the kernel?"
 
 
 ## Installation
