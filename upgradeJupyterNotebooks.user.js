@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         upgrade jupyter notebooks
 // @namespace    http://github.com/farishijazi/
-// @version      0.4
+// @version      0.5
 // @description  upgrade jupyter notebook
 // @description  add F2 hotkey to scroll page to latest run cell
 // @description  autoconfirm "restart kernel"
@@ -432,8 +432,15 @@ unsafeWindow.SHA1 = SHA1;
                 dlbtn.innerText = '[⬇️] download cell HTML';
                 dlbtn.classList.add('dlbtn');
                 dlbtn.onclick = function(){
-                    console.log('clicked!!', output.innerHTML);
-                    anchorClick(makeTextFile('<html><body>'+output.innerHTML+'</body></html>'), document.title + ' cell output.html');
+                    console.log('clicked!!', output);
+                    var firstlineText = '';
+                    var firstEl = output.querySelector('pre');
+                    if (firstEl) firstlineText = firstEl.innerText.split('\n').filter(x=>!!x.trim())[0].replace(/[/'"]/g,'');
+                    var name = firstlineText + ' cell output.html';
+                    if (!firstlineText.trim()) {
+                        name = document.title.replace('Jupyter Notebook','') + name;
+                    }
+                    anchorClick(makeTextFile('<html><body>'+output.innerHTML+'</body></html>'), name);
                 }
                 var output_subarea = output.querySelector('.output_subarea')
                 if (output_subarea) output_subarea.firstElementChild.before(dlbtn);
