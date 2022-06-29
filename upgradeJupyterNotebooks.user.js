@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         upgrade jupyter notebooks
 // @namespace    http://github.com/farishijazi/
-// @version      0.5
+// @version      0.6
 // @description  upgrade jupyter notebook
 // @description  add F2 hotkey to scroll page to latest run cell
 // @description  autoconfirm "restart kernel"
@@ -400,7 +400,7 @@ unsafeWindow.SHA1 = SHA1;
         // if (container) container.style.width = 'max-content';
     }
 
-    observeDocument(function () {
+    observeDocument(function (mutations) {
 
         // restart button confirm
         if (options.autoconfirmRestart) {
@@ -443,7 +443,7 @@ unsafeWindow.SHA1 = SHA1;
                     anchorClick(makeTextFile('<html><body>'+output.innerHTML+'</body></html>'), name);
                 }
                 var output_subarea = output.querySelector('.output_subarea')
-                if (output_subarea) output_subarea.firstElementChild.before(dlbtn);
+                if (output_subarea && output_subarea.firstElementChild) output_subarea.firstElementChild.before(dlbtn);
             });
         }
 
